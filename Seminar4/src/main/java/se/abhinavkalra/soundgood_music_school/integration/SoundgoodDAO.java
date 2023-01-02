@@ -14,7 +14,7 @@ public class SoundgoodDAO {
 	private Connection connection;
 	private PreparedStatement listInstrumentsStmt;
 	private PreparedStatement rentInstrumentStmt;
-	private PreparedStatement countInstrumentRentalsStmt;
+	private PreparedStatement studentInstrumentRentalsStmt;
 	private PreparedStatement terminateRentalStmt;
 	private PreparedStatement checkInstrumentAvailableStmt;
 
@@ -86,10 +86,10 @@ public class SoundgoodDAO {
 		ResultSet result = null;
 		int count = 0;
 		try {
-			countInstrumentRentalsStmt.setInt(1, studentId);
-			result = countInstrumentRentalsStmt.executeQuery();
-			if (result.next())
-				count = result.getInt("count");
+			studentInstrumentRentalsStmt.setInt(1, studentId);
+			result = studentInstrumentRentalsStmt.executeQuery();
+			while(result.next())
+				  count++;
 		} catch (SQLException sqle) {
 			handleException(failureMessage, sqle);
 		} finally {
@@ -138,9 +138,9 @@ public class SoundgoodDAO {
 				+ RENTAL_START_COLUMN_NAME + ", " + RENTAL_END_COLUMN_NAME + ", " + STUDENT_FK_COLUMN_NAME + ", "
 				+ INSTRUMENT_FK_COLUMN_NAME + ") values (CURRENT_DATE, null, ?, ?)");
 		checkInstrumentAvailableStmt = connection.prepareStatement("select * from " + RENTAL_TABLE_NAME + " where "
-				+ INSTRUMENT_FK_COLUMN_NAME + " = ? AND " + RENTAL_END_COLUMN_NAME + " IS NULL");
-		countInstrumentRentalsStmt = connection.prepareStatement("SELECT Count(*) FROM " + RENTAL_TABLE_NAME + " where "
-				+ RENTAL_END_COLUMN_NAME + " is NULL AND " + STUDENT_FK_COLUMN_NAME + " = ?");
+				+ INSTRUMENT_FK_COLUMN_NAME + " = ? AND " + RENTAL_END_COLUMN_NAME + " IS NULL FOR UPDATE");
+		studentInstrumentRentalsStmt = connection.prepareStatement("SELECT * FROM " + RENTAL_TABLE_NAME + " where "
+				+ RENTAL_END_COLUMN_NAME + " is NULL AND " + STUDENT_FK_COLUMN_NAME + " = ? FOR UPDATE");
 		terminateRentalStmt = connection.prepareStatement(
 				"UPDATE " + RENTAL_TABLE_NAME + " set " + RENTAL_END_COLUMN_NAME + " = CURRENT_DATE where "
 						+ INSTRUMENT_FK_COLUMN_NAME + " = ? AND " + RENTAL_END_COLUMN_NAME + " IS NULL");
